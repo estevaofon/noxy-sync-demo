@@ -8,6 +8,7 @@
 // processo (binário baixado da release e verificado pelo noxy.sum).
 
 use errors select *
+use sys
 use github_com.estevaofon.quicksort.quicksort select *
 use github_com.estevaofon.noxy_dynamodb as dynamodb
 
@@ -17,20 +18,28 @@ func main() -> void
     quicksort(ref numeros, 0, length(numeros) - 1)
     print(f"quicksort: {numeros}")
 
-    // 2. Extensão por processo: conecta e tenta um scan. Sem credenciais AWS
-    //    o scan falha, e isso é esperado; o que importa aqui é o binário do
-    //    plugin ter sido baixado, verificado e iniciado pelo sync.
+    // 2. Extensão por processo: conecta e faz um scan. Credenciais vêm do
+    //    ambiente (AWS_PROFILE, AWS_ACCESS_KEY_ID..., ~/.aws/credentials);
+    //    DYNAMO_TABLE escolhe a tabela (default: noxy_sync_demo). Sem
+    //    credenciais ou sem a tabela o scan falha e isso é esperado: o que
+    //    importa é o binário do plugin ter sido baixado, verificado e
+    //    iniciado pelo sync.
+    let tabela: string = "noxy_sync_demo"
+    let env = sys.getenv("DYNAMO_TABLE")
+    if env.ok then
+        tabela = env.value
+    end
     let conn = call_result(dynamodb.connect, {"region": "us-east-1"})
     if !conn.ok then
         print(f"dynamodb: connect falhou: {conn.failure.message}")
         return
     end
     let client: dynamodb.Client = conn.value
-    let scan = call_result(dynamodb.scan, client, "noxy_sync_demo", 5)
+    let scan = call_result(dynamodb.scan, client, tabela, 5)
     if scan.ok then
-        print(f"dynamodb: scan devolveu {length(scan.value)} item(ns)")
+        print(f"dynamodb: scan de '{tabela}' devolveu {length(scan.value)} item(ns)")
     else
-        print(f"dynamodb: extensão carregada; scan falhou como esperado sem credenciais: {scan.failure.message}")
+        print(f"dynamodb: extensão carregada; scan de '{tabela}' falhou: {scan.failure.message}")
     end
     dynamodb.close(client)
 end

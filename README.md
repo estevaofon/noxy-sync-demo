@@ -13,4 +13,8 @@ noxy main.nx
 - `noxy --get github.com/estevaofon/quicksort` sobe o pacote para a tag mais nova e regrava o lock.
 - Apague `noxy_libs/` e rode `noxy --sync` de novo: o resultado é idêntico, verificado pelos hashes do `noxy.sum`.
 
-O `main.nx` ordena um array com o `quicksort` (pacote de fonte) e carrega a extensão `noxy_dynamodb` (plugin por processo). Sem credenciais AWS o `scan` falha, e isso é esperado: o objetivo é ver o binário ser baixado, verificado e iniciado.
+O `main.nx` ordena um array com o `quicksort` (pacote de fonte) e carrega a extensão `noxy_dynamodb` (plugin por processo), fazendo um `scan`. Sem credenciais AWS o `scan` falha, e isso é esperado: o objetivo é ver o binário ser baixado, verificado e iniciado. Com credenciais, escolha a tabela:
+
+```bash
+AWS_PROFILE=meu_perfil DYNAMO_TABLE=minha_tabela noxy main.nx
+```
