@@ -1,0 +1,2 @@
+# derivado: `noxy --sync` reconstrói a partir de noxy.mod + noxy.sum
+noxy_libs/

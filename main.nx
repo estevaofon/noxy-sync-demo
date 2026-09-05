@@ -1,0 +1,38 @@
+// Demo do `noxy --sync`: duas dependências vindas do noxy.mod + noxy.sum.
+//
+//   git clone <este repo> && cd noxy-sync-demo
+//   noxy --sync          # instala noxy_libs a partir do lock (precisa de rede na primeira vez)
+//   noxy main.nx
+//
+// quicksort é um pacote de fonte (.nx); noxy_dynamodb é uma extensão por
+// processo (binário baixado da release e verificado pelo noxy.sum).
+
+use errors select *
+use github_com.estevaofon.quicksort.quicksort select *
+use github_com.estevaofon.noxy_dynamodb as dynamodb
+
+func main() -> void
+    // 1. Pacote de fonte: ordena com o quicksort instalado em noxy_libs.
+    let numeros: int[] = [42, 7, 19, 3, 88, 1, 56, 23]
+    quicksort(ref numeros, 0, length(numeros) - 1)
+    print(f"quicksort: {numeros}")
+
+    // 2. Extensão por processo: conecta e tenta um scan. Sem credenciais AWS
+    //    o scan falha, e isso é esperado; o que importa aqui é o binário do
+    //    plugin ter sido baixado, verificado e iniciado pelo sync.
+    let conn = call_result(dynamodb.connect, {"region": "us-east-1"})
+    if !conn.ok then
+        print(f"dynamodb: connect falhou: {conn.failure.message}")
+        return
+    end
+    let client: dynamodb.Client = conn.value
+    let scan = call_result(dynamodb.scan, client, "noxy_sync_demo", 5)
+    if scan.ok then
+        print(f"dynamodb: scan devolveu {length(scan.value)} item(ns)")
+    else
+        print(f"dynamodb: extensão carregada; scan falhou como esperado sem credenciais: {scan.failure.message}")
+    end
+    dynamodb.close(client)
+end
+
+main()
