@@ -38,6 +38,9 @@ func main() -> void
     let scan = call_result(dynamodb.scan, client, tabela, 5)
     if scan.ok then
         print(f"dynamodb: scan de '{tabela}' devolveu {length(scan.value)} item(ns)")
+        for item in scan.value do
+            print(f"  {item}")
+        end
     else
         print(f"dynamodb: extensão carregada; scan de '{tabela}' falhou: {scan.failure.message}")
     end
