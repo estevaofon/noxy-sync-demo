@@ -18,3 +18,16 @@ O `main.nx` ordena um array com o `quicksort` (pacote de fonte) e carrega a exte
 ```bash
 AWS_PROFILE=meu_perfil DYNAMO_TABLE=minha_tabela noxy main.nx
 ```
+
+No PowerShell (Windows), com `git` e `noxy.exe` (v0.24.0+) no PATH:
+
+```powershell
+git clone https://github.com/estevaofon/noxy-sync-demo.git; cd noxy-sync-demo
+noxy main.nx                 # antes do sync: erro com a dica "run 'noxy --sync'"
+noxy --sync                  # clona o quicksort e baixa noxy-plugin-dynamodb-windows-amd64.exe
+$env:AWS_PROFILE = "meu_perfil"; $env:DYNAMO_TABLE = "minha_tabela"
+noxy main.nx
+noxy --sync --locked         # tudo "cached", nada reescrito
+```
+
+O perfil é lido de `%USERPROFILE%\.aws\credentials`.
